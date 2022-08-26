@@ -12,6 +12,7 @@ def scrape_all():
     browser = Browser('chrome', **executable_path, headless=True)
 
     news_title, news_paragraph = mars_news(browser)
+    hemi_info = mars_images(browser)
 
     # Run all scraping functions and store results in a dictionary
     data = {
@@ -19,7 +20,8 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
+        "last_modified": dt.datetime.now(),
+        'hemispheres': hemi_info
     }
 
     # Stop webdriver and return data
@@ -96,6 +98,47 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+
+
+# define function to get images and titles
+def mars_images(browser):
+    # 1. Use browser to visit the URL 
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+
+    # 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+    hemisphere_image_descr = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    # Parse the resulting html with soup
+    html = browser.html
+    hemi_img_soup = soup(html, 'html.parser')
+
+    hemi_img_url_rel = hemi_img_soup.find_all('div', class_='item')
+
+    for result in hemi_img_url_rel:
+        try:
+            # hemi_url_rel = result.get('src')
+            hemi_url_rel = result.find('img', class_='thumb').get('src')
+            hemi_url = f'{url}{hemi_url_rel}'
+            hemi_title = result.find('h3').get_text()
+            hemisphere_dict = {
+                'img_url': hemi_url,
+                'title' : hemi_title
+            }
+            hemisphere_image_urls.append(hemisphere_dict)
+            
+        except:
+            print('error')
+
+    return hemisphere_image_urls
+# returen At the end of the function, 
+# return the scraped data as a list of 
+# dictionaries with the URL string and title of 
+# each hemisphere image.
+
 
 if __name__ == "__main__":
 
